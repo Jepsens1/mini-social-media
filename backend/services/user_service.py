@@ -4,7 +4,7 @@ from models.models import User
 from schemas.user_schemas import UserRegister, UserUpdate
 from uuid import UUID
 from fastapi import HTTPException, status
-
+from .authentication_service import hash_password, verify_password
 
 def create_user_object(user: UserRegister, session: SessionDep):
     statement = select(User).where(User.username == user.username)
@@ -13,7 +13,7 @@ def create_user_object(user: UserRegister, session: SessionDep):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='User already exist')
     
     user_data = user.model_dump(exclude={'password'})
-    user_data['hashed_password'] = user.password
+    user_data['hashed_password'] = hash_password(user.password)
     db_user = User(**user_data)
     session.add(db_user)
     session.commit()

@@ -39,29 +39,29 @@ async def update_post(post_id: UUID, post: PostUpdate, session: SessionDep):
     return updated_post
 
 
-@router.get('/{post_id}/comments', response_model=PostWithComments)
+@router.get('/{post_id}/comments', response_model=PostWithComments, tags=['comments'])
 async def read_posts_comments(post_id: UUID, session: SessionDep):
     post_with_comments = services.post_service.get_post(post_id, session)
     return post_with_comments
 
 
-@router.get('/{post_id}/likes', response_model=PostWithLikes)
+@router.get('/{post_id}/likes', response_model=PostWithLikes, tags=['likes'])
 async def read_posts_likes(post_id: UUID, session: SessionDep):
     post_with_likes = services.post_service.get_post(post_id, session)
     return post_with_likes
 
 
-@router.post('/{post_id}/comments', response_model=CommentPublic)
+@router.post('/{post_id}/comments', response_model=CommentPublic, tags=['comments'])
 async def create_comment_to_post(post_id: UUID, comment: CommentCreate, session: SessionDep):
     created_comment = services.post_service.create_comment(post_id, comment, session)
     return created_comment
 
-@router.post('/{post_id}/like', response_model=LikePublic)
+@router.post('/{post_id}/like', response_model=LikePublic, tags=['likes'])
 async def like_post(post_id: UUID, user_id: UUID, session: SessionDep):
     liked_post = services.post_service.like_post(post_id, user_id, session)
     return liked_post
 
-@router.delete('/{post_id}/like')
+@router.delete('/{post_id}/like', tags=['likes'])
 async def delete_like(post_id: UUID, user_id: UUID, session: SessionDep) -> dict:
     services.post_service.delete_like(post_id, user_id, session)
     return {'Ok': True}

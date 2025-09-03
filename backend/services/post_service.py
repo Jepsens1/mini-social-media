@@ -71,6 +71,10 @@ def create_comment(post_id: UUID, comment: CommentCreate, session: SessionDep):
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
     
+    user = session.get(User, comment.owner_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user not found')
+    
     db_comment = Comment(**comment.model_dump())
     setattr(db_comment, "post_id", post_id)
     session.add(db_comment)
