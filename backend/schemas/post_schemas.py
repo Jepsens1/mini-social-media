@@ -6,7 +6,6 @@ class PostBase(BaseModel):
     model_config = {'from_attributes': True}
     title: str = Field(max_length=40)
     content: str = Field(max_length=255)
-    created_at: datetime
 
 class PostCreate(PostBase):
     owner_id: UUID
@@ -14,6 +13,7 @@ class PostCreate(PostBase):
 class PostPublic(PostBase):
     id: UUID
     owner_id: UUID
+    created_at: datetime
     updated_at: datetime | None = None
     comment_count: int = 0
     
