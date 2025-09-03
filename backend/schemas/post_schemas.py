@@ -15,6 +15,8 @@ class PostPublic(PostBase):
     id: UUID
     owner_id: UUID
     updated_at: datetime | None = None
+    comment_count: int = 0
+    
 
 class PostUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=40)

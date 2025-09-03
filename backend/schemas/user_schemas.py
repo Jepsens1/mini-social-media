@@ -1,20 +1,18 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 from uuid import UUID
-from schemas.post_schemas import PostPublic
 
 
 #Base class containing shared fields
 class UserBase(BaseModel):
     model_config = {'from_attributes': True}
     username: str = Field(max_length=20)
-    is_active: bool = True
     full_name: str | None = Field(default=None, max_length=40)
 
 
 #User object for displaying public user information
 class UserPublic(UserBase):
+    is_active: bool = True
     id: UUID
-    posts: list["PostPublic"] | None = None
 
 #Pydantic model for creating user
 class UserRegister(UserBase):
