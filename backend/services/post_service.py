@@ -1,11 +1,11 @@
 from database import SessionDep
 from sqlalchemy import func, select
-from models.models import Post, User, Comment
+from models.models import Post, User, Comment, Like
 from schemas.post_schemas import PostCreate, PostUpdate
 from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
-from schemas.comment_schemas import CommentCreate, CommentUpdate
+from schemas.comment_schemas import CommentCreate
 
 
 def create_post_object(post: PostCreate, session: SessionDep):
@@ -66,10 +66,7 @@ def update_post(post_id: UUID, post: PostUpdate, session: SessionDep):
     session.refresh(db_post)
     return db_post
 
-def create_comment_to_post(post_id: UUID, comment: CommentCreate, session: SessionDep) -> Comment:
-    user = session.get(User, comment.owner_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user not found')
+def create_comment(post_id: UUID, comment: CommentCreate, session: SessionDep):
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
@@ -81,38 +78,41 @@ def create_comment_to_post(post_id: UUID, comment: CommentCreate, session: Sessi
     session.refresh(db_comment)
     return db_comment
 
-def get_comments_from_post(post_id: UUID, offset: int, limit: int, session: SessionDep):
-    stmt = select(Comment).where(Comment.post_id == post_id).offset(offset).limit(limit)
-    result = session.execute(stmt)
-    comments = result.scalars().all()
-    return comments
-
-def get_comment_from_post(post_id: UUID, comment_id: UUID, session: SessionDep) -> Comment:
-    stmt = select(Comment).where((Comment.id == comment_id) & (Comment.post_id ==  post_id))
-    comment = session.execute(stmt).scalars().first()
-    if not comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
-    return comment
-
-def delete_comment_from_post(post_id: UUID, comment_id: UUID, session: SessionDep):
-    stmt = select(Comment).where((Comment.id == comment_id) & (Comment.post_id ==  post_id))
-    comment = session.execute(stmt).scalars().first()
-    if not comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
+def like_post(post_id: UUID, user_id: UUID, session: SessionDep):
+    db_post = session.get(Post, post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
+    db_user = session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user not found')
     
-    session.delete(comment)
+    if db_post.owner_id == user_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='cannot like own post')
+    
+    stmt = select(Like).where(Like.post_id == post_id, Like.user_id == user_id)
+    already_liked = session.execute(stmt).scalar_one_or_none()
+    if already_liked:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='already liked the post')
+    
+    like = Like(post_id=post_id, user_id=user_id)
+    session.add(like)
     session.commit()
+    session.refresh(like)
 
-def update_comment_from_post(post_id: UUID, updated_comment: CommentUpdate, comment_id: UUID, session: SessionDep) -> Comment:
-    stmt = select(Comment).where((Comment.id == comment_id) & (Comment.post_id ==  post_id))
-    db_comment = session.execute(stmt).scalars().first()
-    if not db_comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
-    updated_data = updated_comment.model_dump()
-    for field, value in updated_data.items():
-        setattr(db_comment, field, value)
-    setattr(db_comment, "last_edited", datetime.now(timezone.utc))
-    session.add(db_comment)
+    return like
+
+def delete_like(post_id: UUID, user_id: UUID, session: SessionDep):
+    db_post = session.get(Post, post_id)
+    if not db_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
+    db_user = session.get(User, user_id)
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user not found')
+    
+    stmt = select(Like).where(Like.post_id == post_id, Like.user_id == user_id)
+    like = session.execute(stmt).scalar_one_or_none()
+    if not like:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='you have not liked this post')
+    
+    session.delete(like)
     session.commit()
-    session.refresh(db_comment)
-    return db_comment

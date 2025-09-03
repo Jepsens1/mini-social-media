@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 from typing import Annotated
-from schemas.user_schemas import UserPublic, UserRegister, UserUpdate
+from schemas.user_schemas import UserPublic, UserRegister, UserUpdate, UserWithPosts, UserWithComments, UserWithLike
 from database import SessionDep
 from uuid import UUID
 import services.user_service
@@ -8,7 +8,7 @@ import services.user_service
 router = APIRouter(prefix='/users', tags=['users'])
 
 
-@router.post('/create', response_model=UserPublic)
+@router.post('/', response_model=UserPublic)
 async def create_user(user: UserRegister, session: SessionDep):
     db_user = services.user_service.create_user_object(user, session)
     return db_user
@@ -32,3 +32,18 @@ async def delete_user(user_id: UUID, session: SessionDep) -> dict:
 async def update_user(user_id: UUID, user: UserUpdate, session: SessionDep):
     updated_user = services.user_service.update_user(user_id, user, session)
     return updated_user
+
+@router.get('/{user_id}/posts', response_model=UserWithPosts)
+async def read_user_posts(user_id: UUID, session: SessionDep):
+    user = services.user_service.read_user(user_id, session)
+    return user
+
+@router.get('/{user_id}/comments', response_model=UserWithComments)
+async def read_user_comments(user_id: UUID, session: SessionDep):
+    user = services.user_service.read_user(user_id, session)
+    return user
+
+@router.get('/{user_id}/likes', response_model=UserWithLike)
+async def read_user_likes(user_id: UUID, session: SessionDep):
+    user = services.user_service.read_user(user_id, session)
+    return user

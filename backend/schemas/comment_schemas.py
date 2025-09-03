@@ -3,7 +3,7 @@ from datetime import datetime
 from uuid import UUID
 
 class CommentBase(BaseModel):
-    model_config = {'from_attributes': True}
+    model_config = {'from_attributes': True, 'extra': 'forbid'}
     content: str = Field(max_length=255)
 
 class CommentCreate(CommentBase):

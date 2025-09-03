@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
 from database import create_db_and_tables
-from routers import user_router, post_router
+from routers import user_router, post_router, comment_router
 
 
 #Event on startup
@@ -16,6 +16,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(user_router.router)
 app.include_router(post_router.router)
+app.include_router(comment_router.router)
 
 origins_allowed = [
     'http://localhost:3000',

@@ -14,8 +14,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.now(timezone.utc))
     
-    posts = relationship("Post", back_populates="owner")
-    comments = relationship("Comment", back_populates="owner")
+    posts: Mapped[list["Post"]] = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
+    comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="owner", cascade="all, delete-orphan")
+    likes: Mapped[list["Like"]] = relationship("Like", back_populates="user", cascade="all, delete-orphan")
 
 class Post(Base):
     __tablename__ = 'posts'
@@ -26,8 +27,9 @@ class Post(Base):
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     owner_id = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
-    owner = relationship("User", back_populates="posts")
-    comments = relationship("Comment", back_populates="post")
+    owner: Mapped["User"] = relationship("User", back_populates="posts")
+    comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+    likes: Mapped[list["Like"]] = relationship("Like", back_populates="post", cascade="all, delete-orphan")
 
 
 class Comment(Base):
@@ -39,7 +41,16 @@ class Comment(Base):
     post_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('posts.id'), nullable=False)
     owner_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
 
-    post = relationship("Post", back_populates="comments")
-    owner = relationship("User", back_populates="comments")
+    post: Mapped["Post"] = relationship("Post", back_populates="comments")
+    owner: Mapped["User"] = relationship("User", back_populates="comments")
 
+class Like(Base):
+    __tablename__ = 'likes'
+
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True)
+    post_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("posts.id"), primary_key=True)
+    liked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+
+    user: Mapped["User"] = relationship("User", back_populates="likes")
+    post: Mapped["Post"] = relationship("Post", back_populates="likes")
     
