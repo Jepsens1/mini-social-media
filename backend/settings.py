@@ -1,7 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
-from fastapi import Depends
-from typing import Annotated
 
 class Settings(BaseSettings):
     app_name: str = "defaultappname"
@@ -13,5 +11,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
-
-SettingsDep = Annotated[Settings, Depends(get_settings)]

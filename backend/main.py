@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from database import create_db_and_tables
 from routers import user_router, post_router, comment_router
 from fastapi.security import OAuth2PasswordRequestForm
-from database import SessionDep
+from dependencies import SessionDep
 from services.authentication_service import create_access_token, authenticate_user ,ACCESS_TOKEN_EXPIRE_MINUTES, Token
 #Event on startup
 @asynccontextmanager

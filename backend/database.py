@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
-from typing import Annotated
+from sqlalchemy.orm import sessionmaker, declarative_base
 from fastapi import Depends
 
 sqlite_file_name = "database.db"
@@ -19,6 +18,3 @@ def create_db_and_tables():
 def get_session():
     with SessionLocal() as session:
         yield session
-
-#Dependency Injection
-SessionDep = Annotated[Session, Depends(get_session)]

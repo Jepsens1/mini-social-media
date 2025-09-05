@@ -1,15 +1,11 @@
-from fastapi import APIRouter, Query, Depends
-from typing import Annotated
-from database import SessionDep
+from fastapi import APIRouter
 from uuid import UUID
+from dependencies import SessionDep
 from schemas.comment_schemas import CommentPublic, CommentUpdate
-from schemas.user_schemas import UserPublic
 import services.comment_service
-from services.authentication_service import get_current_active_user
+from services.authentication_service import CurrentUser
 
 router = APIRouter(prefix='/comments', tags=['comments'])
-
-CurrentUser = Annotated[UserPublic, Depends(get_current_active_user)]
 
 @router.get('/{comment_id}', response_model=CommentPublic)
 async def get_comment(comment_id: UUID, session: SessionDep):

@@ -1,17 +1,15 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query
 from typing import Annotated
-from database import SessionDep
 from uuid import UUID
 from schemas.post_schemas import PostUpdate, PostCreate, PostPublic, PostWithComments, PostWithLikes
 from schemas.likes_schemas import LikePublic
-from schemas.user_schemas import UserPublic
 from schemas.comment_schemas import CommentPublic, CommentCreate
 import services.post_service
-from services.authentication_service import get_current_active_user
+from dependencies import SessionDep
+from services.authentication_service import CurrentUser
 
 router = APIRouter(prefix='/posts', tags=['posts'])
 
-CurrentUser = Annotated[UserPublic, Depends(get_current_active_user)]
 
 @router.post('/', response_model=PostPublic)
 async def create_post(post: PostCreate, session: SessionDep, current_user: CurrentUser):

@@ -1,9 +1,9 @@
-from database import SessionDep
 from models.models import  Comment
 from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from schemas.comment_schemas import CommentUpdate
+from dependencies import SessionDep
 
 def get_comment(comment_id: UUID, session: SessionDep):
     comment = session.get(Comment, comment_id)

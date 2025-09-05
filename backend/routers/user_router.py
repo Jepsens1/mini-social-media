@@ -1,15 +1,12 @@
-from fastapi import APIRouter, Query, Depends
+from fastapi import APIRouter, Query
 from typing import Annotated
 from schemas.user_schemas import UserPublic, UserRegister, UserUpdate, UserWithPosts, UserWithComments, UserWithLike
-from database import SessionDep
-from models.models import User
 from uuid import UUID
 import services.user_service
-from services.authentication_service import get_current_active_user
+from dependencies import SessionDep
+from services.authentication_service import CurrentUser
+
 router = APIRouter(prefix='/users', tags=['users'])
-
-CurrentUser = Annotated[User, Depends(get_current_active_user)]
-
 
 @router.post('/', response_model=UserPublic)
 async def create_user(user: UserRegister, session: SessionDep):

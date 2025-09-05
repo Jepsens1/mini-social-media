@@ -1,4 +1,3 @@
-from database import SessionDep
 from sqlalchemy import func, select
 from models.models import Post, User, Comment, Like
 from schemas.post_schemas import PostCreate, PostUpdate
@@ -6,6 +5,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from schemas.comment_schemas import CommentCreate
+from dependencies import SessionDep
 
 
 def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep):

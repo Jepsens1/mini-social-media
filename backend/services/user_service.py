@@ -1,10 +1,10 @@
-from database import SessionDep
 from sqlalchemy import select
 from models.models import User
 from schemas.user_schemas import UserRegister, UserUpdate
 from uuid import UUID
 from fastapi import HTTPException, status
-from .authentication_service import hash_password, verify_password
+from .authentication_service import hash_password
+from dependencies import SessionDep
 
 def create_user_object(user: UserRegister, session: SessionDep):
     statement = select(User).where(User.username == user.username)

@@ -5,19 +5,20 @@ from sqlalchemy import select
 from jwt.exceptions import InvalidTokenError
 import jwt
 from uuid import UUID
-from database import SessionDep
 from models.models import User
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from settings import get_settings
+from dependencies import SessionDep
 
 jwt_settings = get_settings()
 
 SECRET_KEY = jwt_settings.jwt_secret_key
 ALGORITHM = jwt_settings.jwt_algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = jwt_settings.access_token_expire_minutes
+
 
 class Token(BaseModel):
     access_token: str
@@ -87,3 +88,5 @@ def authenticate_user(username: str, plain_password: str, session: SessionDep):
     if not verify_password(plain_password, user.hashed_password):
         return False
     return user
+
+CurrentUser = Annotated[User, Depends(get_current_active_user)]
