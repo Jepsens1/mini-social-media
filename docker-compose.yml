@@ -5,9 +5,9 @@ services:
     image: postgres:16
     container_name: postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: supersecret
+      POSTGRES_DB: social_media
     ports:
       - "5431:5432"
     volumes:
