@@ -7,7 +7,7 @@ class CommentBase(BaseModel):
     content: str = Field(max_length=255)
 
 class CommentCreate(CommentBase):
-    owner_id: UUID # TODO for now until auth is setup
+    pass
 
 class CommentPublic(CommentBase):
     id: UUID
@@ -17,4 +17,4 @@ class CommentPublic(CommentBase):
     last_edited: datetime | None = None
 
 class CommentUpdate(CommentBase):
-    owner_id: UUID
+    pass

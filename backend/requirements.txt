@@ -3,3 +3,7 @@ SQLAlchemy
 uvicorn
 pydantic
 passlib
+pyjwt
+python-multipart
+pydantic-settings
+python-dotenv

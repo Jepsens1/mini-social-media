@@ -9,7 +9,7 @@ class PostBase(BaseModel):
     content: str = Field(max_length=255)
 
 class PostCreate(PostBase):
-    owner_id: UUID
+    pass
 
 class PostPublic(PostBase):
     id: UUID
