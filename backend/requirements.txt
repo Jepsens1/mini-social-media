@@ -8,3 +8,4 @@ pyjwt
 python-multipart
 pydantic-settings
 python-dotenv
+psycopg2-binary
