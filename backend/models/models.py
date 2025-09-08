@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import String, UUID, Boolean, DateTime, ForeignKey
+from sqlalchemy import String, UUID, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import uuid
 from datetime import datetime, timezone
@@ -17,6 +17,7 @@ class User(Base):
     posts: Mapped[list["Post"]] = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="owner", cascade="all, delete-orphan")
     likes: Mapped[list["Like"]] = relationship("Like", back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
 
 class Post(Base):
     __tablename__ = 'posts'
@@ -53,4 +54,18 @@ class Like(Base):
 
     user: Mapped["User"] = relationship("User", back_populates="likes")
     post: Mapped["Post"] = relationship("Post", back_populates="likes")
-    
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+    __table_args__ = (
+        UniqueConstraint("user_id", "device_name", name="uix_user_device"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False)
+    device_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    user: Mapped["User"] = relationship("User", back_populates="refresh_tokens")
