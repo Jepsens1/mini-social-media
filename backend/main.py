@@ -3,19 +3,12 @@ from datetime import timedelta
 from typing import Annotated
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from contextlib import asynccontextmanager
-from database import create_db_and_tables
 from routers import user_router, post_router, comment_router
 from fastapi.security import OAuth2PasswordRequestForm
 from dependencies import SessionDep, SettingsDep
 from services.authentication_service import create_access_token, verify_refresh_token, create_refresh_token, authenticate_user ,ACCESS_TOKEN_EXPIRE_MINUTES, Token, revoke_refresh_token
-#Event on startup
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    create_db_and_tables()
-    yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.include_router(user_router.router)
 app.include_router(post_router.router)
