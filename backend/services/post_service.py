@@ -7,8 +7,25 @@ from datetime import datetime, timezone
 from schemas.comment_schemas import CommentCreate
 from dependencies import SessionDep
 
+"""
+post_service.py
 
+Handles posts-related logic, including:
+- Creating a post
+- Get a post object based on ID
+- Get a list of posts
+- Update a post object based on ID
+- Delete a post object based on ID
+- Create a comment to specific post
+- Like a specific post
+- Remove like to specific post
+
+
+This module integrates with:
+- SQLAlchemy ORM models (Post, User, Comment, Like)
+"""
 def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep) -> Post:
+    """Creates a new post object"""
     user_exist = session.get(User, owner_id)
     if not user_exist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user does not exist')
@@ -20,6 +37,7 @@ def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep) ->
     return db_post
 
 def get_post(post_id: UUID, session: SessionDep) -> Post:
+    """Get a post based on ID"""
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
@@ -29,6 +47,7 @@ def get_post(post_id: UUID, session: SessionDep) -> Post:
     return post
 
 def get_posts(session: SessionDep, offset: int, limit: int) -> list[Post]:
+    """Get a paginated list of post"""
     stmt = (select(Post, func.count(Comment.id).label('comment_count'))
             .outerjoin(Comment, Comment.post_id == Post.id)
             .group_by(Post.id)
@@ -43,6 +62,7 @@ def get_posts(session: SessionDep, offset: int, limit: int) -> list[Post]:
     return posts_with_counts
 
 def delete_post(post_id: UUID, owner_id: UUID, session: SessionDep) -> None:
+    """Delete a post if the owner_id matches the user that created the post"""
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post does not exist')
@@ -54,6 +74,7 @@ def delete_post(post_id: UUID, owner_id: UUID, session: SessionDep) -> None:
     session.commit()
 
 def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: SessionDep) -> Post:
+    """Update existing post based on ID, if owner_id matches the user created the post"""
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post does not exist')
@@ -73,6 +94,7 @@ def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: Sessio
     return db_post
 
 def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, session: SessionDep) -> Comment:
+    """Creates a new comment object to a specific post"""
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
@@ -90,6 +112,7 @@ def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, sessio
     return db_comment
 
 def like_post(post_id: UUID, user_id: UUID, session: SessionDep) -> Like:
+    """Creates a like object to a specific post"""
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
@@ -113,6 +136,7 @@ def like_post(post_id: UUID, user_id: UUID, session: SessionDep) -> Like:
     return like
 
 def delete_like(post_id: UUID, user_id: UUID, session: SessionDep) -> None:
+    """Delete a like object on specific post"""
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')

@@ -12,6 +12,25 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
 
+"""
+main.py 
+
+Entry point for the whole FastAPI application
+
+Handles FastAPI setup, including:
+- Setup rate-limit (slowapi)
+- Include routers (user, post, comment)
+- Add CORS middleware
+
+Defines the /auth/* endpoints.
+
+Endpoint:
+- GET   / -> main entry point for the api
+- POST  /auth/token -> Login endpoint using oauth2 password flow, returning short-lived (JWT) and long-lived (refresh-token)
+- POST  /auth/refresh -> Refresh endpoint for receiving new short-lived and long-lived tokens
+- DELETE    /auth/logout -> Revokes a current device/session refresh-token
+"""
+
 app = FastAPI()
 
 #rate limit using slowapi
@@ -44,6 +63,7 @@ async def health_status() -> dict:
 
 @app.post('/auth/token', response_model=Token)
 async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: SessionDep):
+    """Creates a Token object containing access_token and refresh_token if the user is authenticated"""
     user = authenticate_user(form_data.username, form_data.password, session)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Incorrect username or password',
@@ -57,6 +77,7 @@ async def login(request: Request, form_data: Annotated[OAuth2PasswordRequestForm
 
 @app.post('/auth/refresh', response_model=Token)
 async def refresh_token(request: Request, refresh_token: str, session: SessionDep):
+    """Creates a Token object containing access_token and refresh_token if the input refresh_token is valid"""
     db_token = verify_refresh_token(refresh_token, session)
     user_agent = request.headers.get("user-agent", "Unknown")
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -67,6 +88,7 @@ async def refresh_token(request: Request, refresh_token: str, session: SessionDe
 
 @app.delete('/auth/logout')
 async def revoke_token(refresh_token: str, session: SessionDep):
+    """Revokes a current device/session"""
     revoke_refresh_token(refresh_token, session)
     return {'msg': "Logged out"}
 

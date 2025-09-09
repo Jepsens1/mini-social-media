@@ -6,7 +6,22 @@ from fastapi import HTTPException, status
 from .authentication_service import hash_password
 from dependencies import SessionDep
 
+"""
+user_service.py
+
+Handles posts-related logic, including:
+- Creating a user
+- Get a user by ID
+- Get a list of users
+- Update a user object based on ID
+- Delete a user object based on ID
+
+
+This module integrates with:
+- SQLAlchemy ORM models (User)
+"""
 def create_user_object(user: UserRegister, session: SessionDep) -> User:
+    """Creates a new user object if the user does not already exist"""
     statement = select(User).where(User.username == user.username)
     user_exist = session.execute(statement).first()
     if user_exist:
@@ -21,16 +36,20 @@ def create_user_object(user: UserRegister, session: SessionDep) -> User:
     return db_user
 
 def read_users_from_db(session: SessionDep, offset: int, limit: int) -> list[User]:
-    users = session.query(User).offset(offset).limit(limit).all()
-    return users
+    """Get a paginated list off users"""
+    stmt = select(User).offset(offset).limit(limit)
+    users = session.execute(stmt).scalars().all()
+    return list(users)
 
 def read_user(user_id: UUID, session: SessionDep) -> User:
+    """Get a user based on ID"""
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
     return user
 
 def delete_user(user_id: UUID, session: SessionDep) -> None:
+    """Delete a user based on ID"""
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
@@ -38,6 +57,7 @@ def delete_user(user_id: UUID, session: SessionDep) -> None:
     session.commit()
 
 def update_user(user_id: UUID, user: UserUpdate, session: SessionDep) -> User:
+    """Update existing user based on ID"""
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found') 

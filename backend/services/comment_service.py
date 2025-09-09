@@ -1,17 +1,32 @@
-from models.models import  Comment
+from models.models import Comment
 from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import datetime, timezone
 from schemas.comment_schemas import CommentUpdate
 from dependencies import SessionDep
 
+"""
+comment_service.py
+
+Handles comments-related logic, including:
+- Get a comment object based on ID
+- Update a comment object based on ID
+- Delete a comment object based on ID
+
+
+This module integrates with:
+- SQLAlchemy ORM models (Comment)
+"""
+
 def get_comment(comment_id: UUID, session: SessionDep) -> Comment:
+    """Get a comment based on ID"""
     comment = session.get(Comment, comment_id)
     if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
     return comment
 
 def update_comment(comment_id: UUID, comment: CommentUpdate, session: SessionDep, owner_id: UUID) -> Comment:
+    """Update existing comment based on ID, if owner_id matches the user created the comment"""
     db_comment = session.get(Comment, comment_id)
     if not db_comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
@@ -28,6 +43,7 @@ def update_comment(comment_id: UUID, comment: CommentUpdate, session: SessionDep
     return db_comment
 
 def delete_comment(comment_id: UUID, owner_id: UUID, session: SessionDep) -> None:
+    """Delete a comment if the owner_id matches the user that created the comment"""
     db_comment = session.get(Comment, comment_id)
     if not db_comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='comment not found')
