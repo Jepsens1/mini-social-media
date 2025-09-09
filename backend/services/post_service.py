@@ -8,7 +8,7 @@ from schemas.comment_schemas import CommentCreate
 from dependencies import SessionDep
 
 
-def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep):
+def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep) -> Post:
     user_exist = session.get(User, owner_id)
     if not user_exist:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='user does not exist')
@@ -42,24 +42,24 @@ def get_posts(session: SessionDep, offset: int, limit: int) -> list[Post]:
         posts_with_counts.append(post)
     return posts_with_counts
 
-def delete_post(post_id: UUID, owner_id: UUID, session: SessionDep):
+def delete_post(post_id: UUID, owner_id: UUID, session: SessionDep) -> None:
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post does not exist')
     
     if post.owner_id != owner_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Cannot delete a post that is not yours')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Cannot delete a post that is not yours')
     
     session.delete(post)
     session.commit()
 
-def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: SessionDep):
+def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: SessionDep) -> Post:
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post does not exist')
     
     if db_post.owner_id != owner_id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Cannot update a post that is not yours')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Cannot update a post that is not yours')
     
     updated_data = post.model_dump(exclude_unset=True)
     for field, value in updated_data.items():
@@ -72,7 +72,7 @@ def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: Sessio
     session.refresh(db_post)
     return db_post
 
-def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, session: SessionDep):
+def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, session: SessionDep) -> Comment:
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
@@ -89,7 +89,7 @@ def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, sessio
     session.refresh(db_comment)
     return db_comment
 
-def like_post(post_id: UUID, user_id: UUID, session: SessionDep):
+def like_post(post_id: UUID, user_id: UUID, session: SessionDep) -> Like:
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')
@@ -112,7 +112,7 @@ def like_post(post_id: UUID, user_id: UUID, session: SessionDep):
 
     return like
 
-def delete_like(post_id: UUID, user_id: UUID, session: SessionDep):
+def delete_like(post_id: UUID, user_id: UUID, session: SessionDep) -> None:
     db_post = session.get(Post, post_id)
     if not db_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='post not found')

@@ -12,7 +12,7 @@ from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from settings import get_settings
 from dependencies import SessionDep
-import base64, secrets
+import secrets
 
 jwt_settings = get_settings()
 
@@ -34,12 +34,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token", refreshUrl="auth/ref
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_user(session: SessionDep, username: str):
+def get_user(session: SessionDep, username: str) -> User | None:
     stmt = select(User).where(User.username == username)
     user = session.execute(stmt).scalar_one_or_none()
     return user
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -84,7 +84,7 @@ def verify_refresh_token(refresh_token: str, session: SessionDep) -> RefreshToke
     
     return db_token
 
-def revoke_refresh_token(refresh_token: str, session: SessionDep):
+def revoke_refresh_token(refresh_token: str, session: SessionDep) -> None:
     stmt = select(RefreshToken).where(RefreshToken.token == refresh_token)
     db_token = session.execute(stmt).scalar_one_or_none()
     if not db_token:
@@ -93,7 +93,7 @@ def revoke_refresh_token(refresh_token: str, session: SessionDep):
     session.commit()
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep):
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -113,7 +113,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], sessio
         raise credentials_exception
     return user
 
-async def get_current_active_user(current_user: Annotated[UserPublic, Depends(get_current_user)]):
+async def get_current_active_user(current_user: Annotated[UserPublic, Depends(get_current_user)]) -> UserPublic:
     if not current_user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Inactive user')
     return current_user
