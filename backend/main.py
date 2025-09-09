@@ -5,10 +5,20 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routers import user_router, post_router, comment_router
 from fastapi.security import OAuth2PasswordRequestForm
-from dependencies import SessionDep, SettingsDep
+from dependencies import SessionDep
 from services.authentication_service import create_access_token, verify_refresh_token, create_refresh_token, authenticate_user ,ACCESS_TOKEN_EXPIRE_MINUTES, Token, revoke_refresh_token
+from slowapi import _rate_limit_exceeded_handler, Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from slowapi.middleware import SlowAPIMiddleware
 
 app = FastAPI()
+
+#rate limit using slowapi
+limiter = Limiter(key_func=get_remote_address, strategy="moving-window",default_limits=["10/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # type: ignore
+app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(user_router.router)
 app.include_router(post_router.router)
