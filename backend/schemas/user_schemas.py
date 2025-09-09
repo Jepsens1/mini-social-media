@@ -9,8 +9,8 @@ from schemas.likes_schemas import LikePublic
 #Base class containing shared fields
 class UserBase(BaseModel):
     model_config = {'from_attributes': True, 'extra': 'forbid'}
-    username: str = Field(max_length=20)
-    full_name: str | None = Field(default=None, max_length=40)
+    username: str = Field(max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$')
+    full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$')
 
 
 #User object for displaying public user information
@@ -34,6 +34,6 @@ class UserRegister(UserBase):
 
 #Pydantic model for PUT or PATCH
 class UserUpdate(UserBase):
-   username: str | None = Field(default=None, max_length=20) # type: ignore
-   full_name: str | None = Field(default=None, max_length=40)
+   username: str | None = Field(default=None, max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$') # type: ignore
+   full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$')
    
