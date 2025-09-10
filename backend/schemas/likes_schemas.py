@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
 from uuid import UUID
-from schemas.post_schemas import PostPublic
 
 """
 likes_schemas.py
@@ -18,4 +17,3 @@ class LikeBase(BaseModel):
 class LikePublic(LikeBase):
     """Public representation of a like, returned in API responses."""
     liked_at: datetime
-    post: PostPublic

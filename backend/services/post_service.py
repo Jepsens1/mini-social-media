@@ -24,6 +24,13 @@ Handles posts-related logic, including:
 This module integrates with:
 - SQLAlchemy ORM models (Post, User, Comment, Like)
 """
+
+def get_likes_and_comments_count(post_id: UUID, session: SessionDep) -> tuple[int, int]:
+    likes_count = session.execute(select(func.count(Like.user_id)).where(Like.post_id == post_id)).scalar_one()
+    comments_count = session.execute(select(func.count(Comment.id)).where(Comment.post_id == post_id)).scalar_one()
+
+    return likes_count, comments_count
+
 def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep) -> Post:
     """Creates a new post object"""
     user_exist = session.get(User, owner_id)
@@ -36,30 +43,32 @@ def create_post_object(post: PostCreate, owner_id: UUID, session: SessionDep) ->
     session.refresh(db_post)
     return db_post
 
+def get_post_with_liked_by(post_id, session: SessionDep) -> Post:
+    post = get_post(post_id, session)
+    liked_by = [like.user.username for like in post.likes]
+    post.liked_by = liked_by
+    return post
+
 def get_post(post_id: UUID, session: SessionDep) -> Post:
     """Get a post based on ID"""
     post = session.get(Post, post_id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Post not found')
     
-    comment_count = session.execute(select(func.count(Comment.id)).where(Comment.post_id == post_id)).scalar_one()
-    post.comment_count = comment_count
+    likes_count, comments_count = get_likes_and_comments_count(post.id, session)
+    post.likes_count = likes_count
+    post.comments_count = comments_count
     return post
 
 def get_posts(session: SessionDep, offset: int, limit: int) -> list[Post]:
     """Get a paginated list of post"""
-    stmt = (select(Post, func.count(Comment.id).label('comment_count'))
-            .outerjoin(Comment, Comment.post_id == Post.id)
-            .group_by(Post.id)
-            .offset(offset)
-            .limit(limit)
-            )
-    result = session.execute(stmt)
-    posts_with_counts = []
-    for post, comment_count in result:
-        post.comment_count = comment_count
-        posts_with_counts.append(post)
-    return posts_with_counts
+
+    posts = session.execute(select(Post).offset(offset).limit(limit)).scalars().all()
+    for post in posts:
+        likes_count, comments_count = get_likes_and_comments_count(post.id, session)
+        post.likes_count = likes_count
+        post.comments_count = comments_count
+    return list(posts)
 
 def delete_post(post_id: UUID, owner_id: UUID, session: SessionDep) -> None:
     """Delete a post if the owner_id matches the user that created the post"""
@@ -91,6 +100,10 @@ def update_post(post_id: UUID, post: PostUpdate, owner_id: UUID, session: Sessio
     session.add(db_post)
     session.commit()
     session.refresh(db_post)
+
+    likes_count, comments_count = get_likes_and_comments_count(db_post.id, session)
+    db_post.likes_count = likes_count
+    db_post.comments_count = comments_count
     return db_post
 
 def create_comment(post_id: UUID, comment: CommentCreate, owner_id: UUID, session: SessionDep) -> Comment:

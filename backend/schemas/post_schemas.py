@@ -26,6 +26,8 @@ class PostPublic(PostBase):
     owner_id: UUID
     created_at: datetime
     updated_at: datetime | None = None
+    likes_count: int = 0
+    comments_count: int = 0
     
 class PostWithComments(PostPublic):
     """Public representation of a post including comments, returned in API responses."""
@@ -33,7 +35,7 @@ class PostWithComments(PostPublic):
 
 class PostWithLikes(PostPublic):
     """Public representation of a post including likes, returned in API responses."""
-    likes_count: int = 0
+    liked_by: list[str] = []
 
 class PostUpdate(BaseModel):
     """Schema for updating a existing post"""

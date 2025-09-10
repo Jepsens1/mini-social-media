@@ -76,7 +76,7 @@ async def read_user_posts(user_id: UUID, session: SessionDep):
     """
     Get user information including posts by ID
     """
-    user = services.user_service.read_user(user_id, session)
+    user = services.user_service.read_user_including_counts(user_id, session)
     return user
 
 @router.get('/{user_id}/comments', response_model=UserWithComments)

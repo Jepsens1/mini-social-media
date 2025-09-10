@@ -88,7 +88,7 @@ async def read_posts_likes(post_id: UUID, session: SessionDep):
     """
     Get a specific post including likes by ID.
     """
-    post_with_likes = services.post_service.get_post(post_id, session)
+    post_with_likes = services.post_service.get_post_with_liked_by(post_id, session)
     return post_with_likes
 
 

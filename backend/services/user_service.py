@@ -4,6 +4,7 @@ from schemas.user_schemas import UserRegister, UserUpdate
 from uuid import UUID
 from fastapi import HTTPException, status
 from .authentication_service import hash_password
+from .post_service import get_likes_and_comments_count
 from dependencies import SessionDep
 
 """
@@ -40,6 +41,16 @@ def read_users_from_db(session: SessionDep, offset: int, limit: int) -> list[Use
     stmt = select(User).offset(offset).limit(limit)
     users = session.execute(stmt).scalars().all()
     return list(users)
+
+def read_user_including_counts(user_id: UUID, session: SessionDep) -> User:
+    """Get a user including likes_count and comments_count based on ID"""
+    user = read_user(user_id, session)
+    for post in user.posts:
+        likes_count, comments_count = get_likes_and_comments_count(post.id, session)
+        post.likes_count = likes_count
+        post.comments_count = comments_count
+
+    return user
 
 def read_user(user_id: UUID, session: SessionDep) -> User:
     """Get a user based on ID"""
