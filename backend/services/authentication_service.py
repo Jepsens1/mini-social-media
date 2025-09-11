@@ -42,6 +42,15 @@ REFRESH_TOKEN_EXPIRE_DAYS = jwt_settings.refresh_token_expire_days
 
 class Token(BaseModel):
     """Token schema used for returning access_token and refresh_token in API responses."""
+    model_config = {'json_schema_extra': {
+        'examples': [
+            {
+                'access_token': "access_token",
+                'refresh_token': 'refresh_token',
+                'token_type': 'bearer'
+            }
+        ]
+    }}
     access_token: str
     refresh_token: str
     token_type: str

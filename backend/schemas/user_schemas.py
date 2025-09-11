@@ -15,8 +15,8 @@ These schemas are used for request validation and response serialization.
 class UserBase(BaseModel):
     """Base schema for user, shared between input and output models."""
     model_config = {'from_attributes': True, 'extra': 'forbid'}
-    username: str = Field(max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$') #Only a-z/A-Z/0-9_ allowed
-    full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$') #Only a-z/A-ZæøåÆØÅ allowed
+    username: str = Field(max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$', examples=['coolusername123']) #Only a-z/A-Z/0-9_ allowed
+    full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$', examples=['John Doe']) #Only a-z/A-ZæøåÆØÅ allowed
 
 class UserPublic(UserBase):
     """Public representation of a user, returned in API responses."""
@@ -38,10 +38,10 @@ class UserWithLike(UserPublic):
 
 class UserRegister(UserBase):
     """Schema for creating a new user"""
-    password: str = Field(min_length=8, max_length=40)
+    password: str = Field(min_length=8, max_length=40, examples=['supersecret123!'])
 
 class UserUpdate(UserBase):
    """Schema for updating a existing user"""
-   username: str | None = Field(default=None, max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$') # type: ignore
-   full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$')
+   username: str | None = Field(default=None, max_length=20, pattern=r'^[a-zA-Z0-9_]{3,20}$', examples=['updatecoolusername123']) # type: ignore
+   full_name: str | None = Field(default=None, max_length=40, pattern=r'^[a-zA-ZæøåÆØÅ ]{3,40}$', examples=['John Doe'])
    

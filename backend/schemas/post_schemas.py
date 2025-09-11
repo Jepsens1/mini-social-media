@@ -13,8 +13,8 @@ These schemas are used for request validation and response serialization.
 class PostBase(BaseModel):
     """Base schema for post, shared between input and output models."""
     model_config = {'from_attributes': True, 'extra': 'forbid'}
-    title: str = Field(max_length=40)
-    content: str = Field(max_length=255)
+    title: str = Field(max_length=40, examples=['This might be the coolest post'])
+    content: str = Field(max_length=255, examples=['Just look at this content i am sharing.'])
 
 class PostCreate(PostBase):
     """Schema for creating a new post."""
@@ -39,6 +39,6 @@ class PostWithLikes(PostPublic):
 
 class PostUpdate(BaseModel):
     """Schema for updating a existing post"""
-    title: str | None = Field(default=None, max_length=40)
-    content: str | None = Field(default=None, max_length=255)
+    title: str | None = Field(default=None, max_length=40, examples=['This might be the coolest and greatest post on this platform'])
+    content: str | None = Field(default=None, max_length=255, examples=['Just look at this content i am sharing.'])
 

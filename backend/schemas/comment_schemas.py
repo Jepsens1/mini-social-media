@@ -13,7 +13,7 @@ These schemas are used for request validation and response serialization.
 class CommentBase(BaseModel):
     """Base schema for comment, shared between input and output models."""
     model_config = {'from_attributes': True, 'extra': 'forbid'}
-    content: str = Field(max_length=255)
+    content: str = Field(max_length=255, examples=['This is a super cool comment'])
 
 class CommentCreate(CommentBase):
     """Schema for creating a new comment."""
