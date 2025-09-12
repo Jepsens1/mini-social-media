@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from settings import get_settings
 from dependencies import SessionDep
 import secrets
+from settings import logger
 
 """
 authentication_service.py
@@ -65,12 +66,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_user(session: SessionDep, username: str) -> User | None:
     """Get a User | None object based on username """
+    logger.debug('Getting user from DB', extra={'username': username})
     stmt = select(User).where(User.username == username)
     user = session.execute(stmt).scalar_one_or_none()
+    logger.info('Retrieved user by username', extra={'user': user.__dict__})
     return user
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Creates a JWT token based on data dict, sets expires date and issued at"""
+    logger.debug('Creating short-lived JWT', extra={'data': data, 'expires_delta': expires_delta})
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -80,11 +84,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     to_encode.update({"exp": expire})
     to_encode.update({"iat": issued_at})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    logger.info('Created short-lived JWT', extra={'data': data, 'expires_delta': expires_delta})
     return encoded_jwt
 
 def create_refresh_token(user_id: UUID, device_name: str, session: SessionDep) -> RefreshToken:
     """Creates a refresh_token, based on device_name and user_id and stores in database"""
-    
+    logger.debug('Creating long-lived refresh-token', extra={'user_id': user_id})
     # Generates a URL safe base64 encoded string
     token = secrets.token_urlsafe(32)
 
@@ -96,6 +101,7 @@ def create_refresh_token(user_id: UUID, device_name: str, session: SessionDep) -
     db_token = session.execute(stmt).scalar_one_or_none()
 
     if db_token: # rotate token for user+device combination
+        logger.debug('Found user+device combination in DB', extra={'token_id': db_token.id})
         db_token.token = token
         db_token.expires_at = expires_at
         db_token.revoked = False
@@ -107,45 +113,55 @@ def create_refresh_token(user_id: UUID, device_name: str, session: SessionDep) -
             device_name=device_name
         )
         session.add(db_token)
+        logger.debug('Could not find user+device combination in DB. Creating a new row in DB', extra={'token_id': db_token.id})
 
     # commit changes to database
     session.commit()
     session.refresh(db_token)
+    logger.info('Created long-lived refresh-token', extra={'user_id': user_id})
     return db_token
 
 def verify_refresh_token(refresh_token: str, session: SessionDep) -> RefreshToken:
     """Validate refresh_token and return the corresponding RefreshToken object if valid."""
+    logger.debug('Verifying refresh-token')
     stsm = select(RefreshToken).where(RefreshToken.token == refresh_token)
     db_token = session.execute(stsm).scalar_one_or_none()
     
     # checks if token exist, is revoked or expired.
     if not db_token or db_token.revoked or db_token.expires_at < datetime.now(timezone.utc):
+        logger.warning('Invalid or expired refresh token')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired refresh token")
     
     return db_token
 
 def revoke_refresh_token(refresh_token: str, session: SessionDep) -> None:
     """Revokes a given refresh_token"""
+    logger.debug('Revoking refresh-token')
     stmt = select(RefreshToken).where(RefreshToken.token == refresh_token)
     db_token = session.execute(stmt).scalar_one_or_none()
     if not db_token:
+        logger.warning('Invalid refresh token')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid refresh token')
     # sets the user+device to be revoked
     db_token.revoked = True
+    logger.info('Refresh-token revoked')
     session.commit()
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep) -> User:
     """Get current user using the Oauth2 scheme (Authorization Header)"""
+    logger.debug('Get current user from Authorization Header')
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
+        logger.debug('Decoding JWT payload')
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         # Get user_id from payload
         user_id = payload.get("sub")
+        logger.debug('JWT Payload decoded', extra={'user_id': user_id})
         if user_id is None:
             raise credentials_exception
         token_data = TokenData(user_id=user_id)
@@ -174,11 +190,15 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def authenticate_user(username: str, plain_password: str, session: SessionDep):
     """Checks if user exist in database and the plain_password matches stored password"""
+    logger.debug('Authenticating user', extra={'username': username})
     user = get_user(session, username)
     if not user:
+        logger.info('User login attempt failed. user not found', extra={'username': username})
         return False
     if not verify_password(plain_password, user.hashed_password):
+        logger.info('User login attempt failed', extra={'username': username})
         return False
+    logger.info('User authenticated successfully', extra={'username': username})
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_active_user)]

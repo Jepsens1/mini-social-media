@@ -11,7 +11,8 @@ from slowapi import _rate_limit_exceeded_handler, Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
-
+from settings import setup_logging, logger
+from contextlib import asynccontextmanager
 """
 main.py 
 
@@ -31,7 +32,14 @@ Endpoint:
 - DELETE    /auth/logout -> Revokes a current device/session refresh-token
 """
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    #configure logging
+    setup_logging()
+    logger.info('Logger is setup!')
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 #rate limit using slowapi
 limiter = Limiter(key_func=get_remote_address, strategy="moving-window",default_limits=["10/minute"])
@@ -83,7 +91,7 @@ async def refresh_token(request: Request, refresh_token: str, session: SessionDe
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     new_access_token = create_access_token(data={"sub": str(db_token.user_id)}, expires_delta=access_token_expires)
     new_refresh_token = create_refresh_token(db_token.user_id, user_agent, session)
-
+    
     return Token(access_token=new_access_token, refresh_token=new_refresh_token.token, token_type='bearer')
 
 @app.delete('/auth/logout')

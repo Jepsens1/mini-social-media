@@ -1,6 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
-
+import logging
+import logging.handlers
+import logging.config
+import json
+import  pathlib
 """
 settings.py
 
@@ -35,3 +39,11 @@ def get_settings():
     and reused across the application.
     """
     return Settings()
+
+def setup_logging():
+    config_file = pathlib.Path("logging_config.json")
+    with open(config_file) as f_in:
+        config = json.load(f_in)
+    logging.config.dictConfig(config)
+
+logger = logging.getLogger('app')
