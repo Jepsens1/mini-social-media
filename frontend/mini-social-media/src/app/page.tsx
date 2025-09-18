@@ -1,7 +1,9 @@
+import PostList from "./components/PostList";
+
 export default function Home() {
   return (
-    <>
-      <h1 className="text-5xl">Hello World</h1>
-    </>
+    <div className="App">
+      <PostList/>
+    </div>
   )
 }
