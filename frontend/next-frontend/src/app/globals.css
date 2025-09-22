@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@layer components {
+  .sidebar-icon {
+    @apply relative flex items-center justify-center
+           h-12 w-12 mx-auto my-2 shadow-lg
+           bg-gray-800 text-green-500 hover:bg-green-600 hover:text-white
+           rounded-3xl hover:rounded-xl transition-all duration-300;
+  }
+  .sidebar-nav {
+    @apply fixed top-0 left-0 h-screen w-16 lg:flex flex-col bg-gray-900 text-white shadow-lg transition-all duration-200;
+    @apply scale-0;
+  }
+  @media (width >= 64rem /* 1024px */)  {
+  .sidebar-nav {
+    @apply scale-100;
+    }
+  }
+  .sidebar-tooltip {
+   @apply absolute w-auto p-2 m-2 min-w-max left-14 rounded-md shadow-md text-white bg-gray-900
+   text-xs font-bold transition-all duration-100 scale-0 origin-left;
+  }
+  .app {
+    @apply flex-1 lg:ml-16 h-screen bg-slate-200 overflow-auto transition-all duration-300;
+  }
+}
