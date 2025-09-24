@@ -20,7 +20,4 @@
    @apply absolute w-auto p-2 m-2 min-w-max left-14 rounded-md shadow-md text-white bg-gray-900
    text-xs font-bold transition-all duration-100 scale-0 origin-left;
   }
-  .app {
-    @apply flex-1 lg:ml-16 h-screen bg-slate-200 overflow-auto transition-all duration-300;
-  }
 }
