@@ -1,10 +1,10 @@
 "use client"
-import React, { useState } from 'react'
+import React from 'react'
 import SideBarIcon from './SideBarIcon'
 import { FaBlog, FaInfoCircle, FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa'
 
 const SideNavbar = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    const isLoggedIn = localStorage.getItem('access_token')
   return (
     <nav>
     <div className='sidebar-nav'>
