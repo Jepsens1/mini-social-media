@@ -4,7 +4,7 @@ import SideBarIcon from './SideBarIcon'
 import { FaBlog, FaInfoCircle, FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa'
 
 const SideNavbar = () => {
-    const isLoggedIn = localStorage.getItem('access_token')
+    const isLoggedIn = localStorage.getItem('social_media_tokens')
   return (
     <nav>
     <div className='sidebar-nav'>

@@ -46,10 +46,8 @@ export default function Login() {
                 }
                 return
             }
-            
             const data: LoginResponse = await response.json()
-            localStorage.setItem('access_token', data.access_token) //TODO Create API endpoint for receiving as http only cookies
-            localStorage.setItem('refresh_token', data.refresh_token) //TODO Create API endpoint for receiving as http only cookies
+            localStorage.setItem("social_media_tokens", JSON.stringify(data))
 
             //Redirects the user to frontpage
             router.push('/')
